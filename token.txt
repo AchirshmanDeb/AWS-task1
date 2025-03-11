@@ -1,0 +1,5 @@
+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
+
+AchirshmanDeb
+
+syndicate generate project --name task01

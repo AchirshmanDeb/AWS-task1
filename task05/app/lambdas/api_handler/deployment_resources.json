@@ -3,14 +3,12 @@
     "predefined_policies": [],
     "principal_service": "lambda",
     "custom_policies": [
-      "lambda-basic-execution",
-      "dynamodb:GetItem",
-      "dynamodb:Query",
-      "dynamodb:PutItem",
-      "dynamodb:Batch*",
-      "dynamodb:DeleteItem"
+      "lambda-basic-execution"
     ],
     "resource_type": "iam_role",
+    "allowed_accounts": [
+      "890742610830"
+    ],
     "tags": {}
   }
 }

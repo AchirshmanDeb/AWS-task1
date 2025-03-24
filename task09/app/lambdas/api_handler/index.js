@@ -1,6 +1,4 @@
-// api_handler/index.js
-
-const weatherClient = require('../layers/weather_sdk/weather-client');  // Name must match folder/module in Layer
+const weatherClient = require('weather-client');
 
 exports.handler = async (event) => {
   const path = event.rawPath || event.path;

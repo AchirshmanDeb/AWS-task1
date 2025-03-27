@@ -1,12 +1,15 @@
 const https = require("https");
 
 exports.handler = async (event) => {
-    if (event.path !== "/weather" || event.httpMethod !== "GET") {
+    const path = event.rawPath || event.path;  // Fix for undefined path issue
+    const method = event.requestContext?.http?.method || event.httpMethod;  // Fix for undefined method issue
+
+    if (path !== "/weather" || method !== "GET") {
         return {
             statusCode: 400,
             body: JSON.stringify({
                 statusCode: 400,
-                message: `Bad request syntax or unsupported method. Request path: ${event.path}. HTTP method: ${event.httpMethod}`
+                message: `Bad request syntax or unsupported method. Request path: ${path}. HTTP method: ${method}`
             })
         };
     }
@@ -19,7 +22,23 @@ exports.handler = async (event) => {
         https.get(url, (res) => {
             let data = "";
             res.on("data", (chunk) => (data += chunk));
-            res.on("end", () => resolve({ statusCode: 200, body: data }));
-        }).on("error", () => resolve({ statusCode: 500, body: JSON.stringify({ message: "Failed to fetch weather data" }) }));
+            res.on("end", () => {
+                try {
+                    const parsedData = JSON.parse(data);
+                    if (!parsedData.hourly) {
+                        return resolve({
+                            statusCode: 500,
+                            body: JSON.stringify({ message: "Invalid API response: missing hourly data" })
+                        });
+                    }
+                    resolve({ statusCode: 200, body: JSON.stringify(parsedData) });
+                } catch (error) {
+                    resolve({ statusCode: 500, body: JSON.stringify({ message: "Failed to parse API response" }) });
+                }
+            });
+        }).on("error", () => resolve({
+            statusCode: 500,
+            body: JSON.stringify({ message: "Failed to fetch weather data" })
+        }));
     });
 };

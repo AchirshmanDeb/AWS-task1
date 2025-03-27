@@ -1,30 +1,25 @@
-const OpenMeteoAPI = require("../layers/weather_sdk/api"); // Use the Layer
+const https = require("https");
 
 exports.handler = async (event) => {
-    const { path, httpMethod, queryStringParameters } = event;
-
-    if (path !== "/weather" || httpMethod !== "GET") {
+    if (event.path !== "/weather" || event.httpMethod !== "GET") {
         return {
             statusCode: 400,
             body: JSON.stringify({
-                message: `Bad request syntax or unsupported method. Request path: ${path}. HTTP method: ${httpMethod}`
+                statusCode: 400,
+                message: `Bad request syntax or unsupported method. Request path: ${event.path}. HTTP method: ${event.httpMethod}`
             })
         };
     }
 
-    const latitude = queryStringParameters?.lat || "50.4375";
-    const longitude = queryStringParameters?.lon || "30.5";
+    const lat = event.queryStringParameters?.lat || "50.4375";
+    const lon = event.queryStringParameters?.lon || "30.5";
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&current_weather=true`;
 
-    try {
-        const weatherData = await OpenMeteoAPI.fetchWeather(latitude, longitude);
-        return {
-            statusCode: 200,
-            body: JSON.stringify(weatherData)
-        };
-    } catch (error) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: "Failed to fetch weather data", error: error.message })
-        };
-    }
+    return new Promise((resolve) => {
+        https.get(url, (res) => {
+            let data = "";
+            res.on("data", (chunk) => (data += chunk));
+            res.on("end", () => resolve({ statusCode: 200, body: data }));
+        }).on("error", () => resolve({ statusCode: 500, body: JSON.stringify({ message: "Failed to fetch weather data" }) }));
+    });
 };

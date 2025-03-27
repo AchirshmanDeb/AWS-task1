@@ -12,7 +12,17 @@ class OpenMeteoAPI {
             https.get(url, (res) => {
                 let data = "";
                 res.on("data", chunk => (data += chunk));
-                res.on("end", () => resolve(JSON.parse(data)));
+                res.on("end", () => {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (!parsedData.hourly) {
+                            return reject(new Error("Missing hourly data in response"));
+                        }
+                        resolve(parsedData);
+                    } catch (error) {
+                        reject(new Error("Invalid JSON response from Open-Meteo API"));
+                    }
+                });
             }).on("error", err => reject(err));
         });
     }

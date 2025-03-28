@@ -1,4 +1,4 @@
 .syndicate
 logs/
-node_modules
 .syndicate-config-*/
+node_modules
